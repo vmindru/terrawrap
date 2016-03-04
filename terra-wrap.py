@@ -6,8 +6,18 @@ from optparse import OptionParser
 import sys
 import os
 
+#DEFAULT VARS ( LATER THIS ARE SET BY ENV_VARS or CONFIG FILE or %prog parameters )
+terraform_bin=''
+exec_path=os.getcwd()
+
+
+default_opts = {
+            'terraform_bin': terraform_bin,
+            'exec_path': exec_path
+        }
+
 class terraform_this():
-    def __init__(self):
+    def __init__(self,default_opts):
        pass  
 
     def collect_opts(self):
@@ -24,8 +34,15 @@ class terraform_this():
             (options, args) = parser.parse_args()
             my_options = {
                 "options": {
-                        "Queue": options.queue
-                            }   
+                        "region": options.region ,
+                        "bucket": options.bucket ,
+                        "endpoint": options.endpoint ,
+                        "Encrypt": options.Encrypt ,
+                        "acl": options.acl ,
+                        "access_key": options.access_key ,
+                        "secret_key": options.secret_key ,
+                        "configure": options.configure ,
+                            }    ,
             }
             return my_options
     def configure(self):
@@ -53,6 +70,6 @@ class terraform_this():
         pass
 
 if __name__ == "__main__":
-    instance = terraform_this()
+    instance = terraform_this(default_opts)
     opts = instance.collect_opts()
     print opts['options']['region']
