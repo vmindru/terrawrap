@@ -6,6 +6,7 @@ from optparse import OptionParser
 import sys
 import os
 import subprocess
+import re
 
 terraform_bin='/home/vmindru/bin/terraform'
 path='/tmp/test/'
@@ -21,59 +22,47 @@ class terraform_this():
     def __init__(self,default_opts):
         self.path=default_opts['path']
         self.prog=default_opts['prog']
+        if not 'S3_REGION' in os.environ or not 'S3_BUCKET' in os.environ:
+            exit('S3_REGION or S3_BUCKET  is not defined')
 
     def collect_opts(self):
             parser = OptionParser(version=progvers)
-            parser.add_option("-r", "--region", dest = "region" ,  help="specify S3 region where to store tfstate files")
-            parser.add_option("-b", "--bucket", dest = "bucket" ,  help="specify S3 bucket where to store tfstate files")
-            parser.add_option("-e", "--endpoint", dest = "endpoint"  , help="specify endpoint")
-            parser.add_option("-E", "--Encrypt", dest = "Encrypt" , default= True , help="Enable Encryption")
-            parser.add_option("-a", "--acl", dest = "acl" , default= "private"  , help="specify acl")
-            parser.add_option("-k", "--key", dest = "key" ,  help="specify S3 key where to store tfstate files")
-            parser.add_option("-K", "--kms_key_id", dest = "kms_key_id" ,  help="specify kms_key_id")
-            parser.add_option("-c", "--configure", dest = "configure" , default= False  , help="configure S3 remote backend")
-            parser.add_option("-i", "--interactive", dest= "interactive", default= False, help="collect arguments interactive")
-            parser.add_option("-C", "--clean_config", dest= "clean_config", default= False, help="remove old configs")
+            parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
+            parser.add_option("-p", "--plan", dest="plan",  help="run terraform plan")
+            parser.add_option("-a", "--apply", dest="apply", default=False , help="run terraform apply")
+            parser.add_option("-c", "--clean_config", dest= "clean_config", default= False, help="remove old configs")
             (options, args) = parser.parse_args()
             self.options = options
             return options
+    def get_git_dir(self):
+        data = subprocess.Popen(['git','remote','show','-n','origin'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        data.wait()
+        if data.returncode == 0:
+            out, err = data.communicate()
+            for line in out.splitlines():
+                if 'Fetch' in line:
+                    match = re.search('\/.*',line)
+                    self.key =  match.group(0).split('.')[0].replace('/','')
+        else:
+            self.key = False
+        return self.key
 
     def build_configure_args(self):
-        # Check if options.region is defined, if not propose to setup and pring ENVIRON value
-        # if provide no input it will set the VAR  value equal to  ENVIRON VALUE, else set the var value 
-        # equal to input
-        if self.options.region != "":
-            sys.stdout.write('Specify region: '+'use:'+os.getenv('S3_REGION','')+'? or specify value: ')
-            region_in=sys.stdin.readline().rstrip()
-            if region_in == '':
-                self.options.region = os.getenv('S3_REGION','')
+        if self.options.key == '':
+            self.get_git_dir()
+            if self.key == False:
+                 exit("this does not look like a git folder , can not auto determine key please -k option")
             else:
-                self.options.region = region_in
-
-        if self.options.bucket != "":
-            sys.stdout.write('Specify bucket: '+'use:'+os.getenv('S3_BUCKET','')+'? or specify value: ')
-            region_in=sys.stdin.readline().rstrip()
-            if region_in == '':
-                self.options.bucket = os.getenv('S3_BUCKET','')
-            else:
-                self.options.bucket = region_in
-
-        if self.options.key != "":
-            sys.stdout.write('Specify key: '+'use:'+os.getenv('S3_KEY','')+'? or specify value: ')
-            region_in=sys.stdin.readline().rstrip()
-            if region_in == '':
-                self.options.key = os.getenv('S3_KEY','')
-            else:
-                self.options.key = region_in
-        args=[self.options.region,self.options.bucket,self.options.key]
-        return args    
+               self.options.key = self.key
 
     def configure(self):
         if not os.path.exists(self.path+'.terraform'):
             args = self.build_configure_args()
-            args.insert(0,self.prog)
-            args.insert(1,'plan')
-            child = subprocess.call(args)
+            print "CONFIGURING TERRAFORM with opts: {},{},{}".format(self.options.key,os.environ.get('S3_REGION'),os.environ.get('S3_BUCKET'))
+#            args.insert(0,self.prog)
+#            args.insert(1,'plan')
+#            child = subprocess.call(args)
+
         else:
             exit('error')
         pass
