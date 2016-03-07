@@ -23,3 +23,14 @@ export TERRAWRAP_PROG='/home/vmindru/bin/terraform' # path to your terraform bin
 TODO:
 
     add [plan|apply] into help message no arg will run plan by default
+
+This is a WRAPPER for https://www.terraform.io/docs/state/remote/s3.html 
+terraform remote will move terraform.tfstate into .terraform folder.
+
+
+.gitignore
+
+    add following to .gitignore:
+    terraform.tfstate.backup
+    .terraform/
+
