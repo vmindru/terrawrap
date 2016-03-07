@@ -8,12 +8,16 @@ import os
 import subprocess
 import re
 
-terraform_bin='/home/vmindru/bin/terraform'
-path='/tmp/test/'
-prog=terraform_bin
+
+if 'TERRAWRAP_PATH' not in os.environ:
+    path='/tmp/test/'
+else:
+    path=os.getcwd()
+
+if 'TERRAWRAP_PROG' not in os.environ:
+    prog='/home/vmindru/proj/terraform/terraform'
 
 default_opts = {
-            'terraform_bin': terraform_bin,
             'prog': prog,
             'path': path
         }
@@ -28,6 +32,7 @@ class terraform_this():
 
     def collect_opts(self):
             parser = OptionParser(version=progvers)
+            parser.description='This is a terraform wrapper targeted, this will make sure you are always using S3 backned for state files'
             parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
             parser.add_option("-q", "--quite", dest='quite' , action='store_true', default = False, help="try to be quite")
             (options, args) = parser.parse_args()
