@@ -23,7 +23,7 @@ class terraform_this():
         
         if 'TERRAWRAP_PROG' not in os.environ:
             if os.path.exists('/usr/bin/terraform'):
-                path='/usr/bin/terraform'
+                prog='/usr/bin/terraform'
             else:
                 exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
         else:
@@ -64,7 +64,23 @@ class terraform_this():
                         exit('can not figure out the repo name base on your origin, please use  -k key to specify the key')
         else:
             exit('your git does not seem to have a remote origin set please set or use -k key to specify the key')
-        
+
+        #let's find out the relative path to the .git base this will be used to compound the S3_KEY
+        data = subprocess.Popen(['git','rev-parse','--show-toplevel'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        data.wait()
+        if data.returncode == 0:
+            self.top_level_path, err = data.communicate()
+            self.top_level_path =  self.top_level_path.rstrip()
+        else:
+            exit('can not determine the relative path, please issue a BUG to vmindru')
+
+        #print "self.key: {} , self.top_level_path: {}, self.path: {}".format(self.key, self.top_level_path, self.path)
+        # CONVERT STRING TO ARRAY AND SUBSTRACT THE RELATIVE PATH 
+        s0 = self.path.split('/')
+        s1 = self.top_level_path.split('/')
+        for item in s1:
+            s0.remove(item)
+        self.relative_path =  "/".join(s0)
         return self.key
 
     def build_configure_args(self):
@@ -124,7 +140,7 @@ class terraform_this():
             args_plan = ["-backend=s3", 
                         "-backend-config=bucket="+self.options.bucket,
                         "-backend-config=region="+self.options.region,
-                        "-backend-config=key="+self.options.key+"/terraform.tfstate",
+                        "-backend-config=key="+self.options.key+"/"+self.relative_path+"/terraform.tfstate",
                     ]
             args_plan.insert(0,self.prog)
             args_plan.insert(1,'remote')
