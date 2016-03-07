@@ -11,8 +11,8 @@ import re
 
 class terraform_this():
     def __init__(self):
-        self.init_default_opts()
         self.collect_opts()
+        self.init_default_opts()
 
     def init_default_opts(self):
 
