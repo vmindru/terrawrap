@@ -9,31 +9,37 @@ import subprocess
 import re
 
 
-if 'TERRAWRAP_PATH' not in os.environ:
-    path=os.getcwd()
-else:
-    path=os.environ['TERRAWRAP_PATH']
-
-if 'TERRAWRAP_PROG' not in os.environ:
-    if os.path.exists('/usr/bin/terraform'):
-        path='/usr/bin/terraform'
-    else:
-        exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
-else:
-    prog=os.environ.get('TERRAWRAP_PROG')
-
-default_opts = {
-            'prog': prog,
-            'path': path,
-        }
-
 class terraform_this():
-    def __init__(self,default_opts):
+    def __init__(self):
+        self.init_default_opts()
+        self.collect_opts()
+
+    def init_default_opts(self):
+
+        if 'TERRAWRAP_PATH' not in os.environ:
+            path=os.getcwd()
+        else:
+            path=os.environ['TERRAWRAP_PATH']
+        
+        if 'TERRAWRAP_PROG' not in os.environ:
+            if os.path.exists('/usr/bin/terraform'):
+                path='/usr/bin/terraform'
+            else:
+                exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
+        else:
+            prog=os.environ.get('TERRAWRAP_PROG')
+        
+        default_opts = {
+                    'prog': prog,
+                    'path': path,
+                }
         self.path=default_opts['path']
         self.prog=default_opts['prog']
+        
         if not 'S3_REGION' in os.environ or not 'S3_BUCKET' in os.environ:
             exit('S3_REGION or S3_BUCKET one or both ENV vars are not defined')
-        self.collect_opts()
+        
+        self.default_opts = default_opts 
 
     def collect_opts(self):
             parser = OptionParser(version=progvers)
@@ -155,5 +161,5 @@ class terraform_this():
         pass
 
 if __name__ == "__main__":
-    instance = terraform_this(default_opts)
+    instance = terraform_this()
     instance.run()
