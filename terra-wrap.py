@@ -45,7 +45,8 @@ class terraform_this():
         self.default_opts = default_opts 
 
     def collect_opts(self):
-            parser = OptionParser(version=progvers)
+            epilog="""ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_REGION,S3_BUCKET,TERRAWRAP_PROG"""
+            parser = OptionParser(version=progvers,usage='usage: %prog [-q][-k] [plan|apply]',epilog=epilog)
             parser.description='This is a terraform wrapper targeted, this will make sure you are always using S3 backned for state files'
             parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
             parser.add_option("-q", "--quite", dest='quite' , action='store_true', default = False, help="try to be quite")
