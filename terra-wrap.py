@@ -58,9 +58,13 @@ class terraform_this():
             for line in out.splitlines():
                 if 'Fetch' in line:
                     match = re.search('\/.*',line)
-                    self.key =  match.group(0).split('.')[0].replace('/','')
+                    if match != None:
+                        self.key =  match.group(0).split('.')[0].replace('/','')
+                    else:
+                        exit('can not figure out the repo name base on your origin, please use  -k key to specify the key')
         else:
-            self.key = False
+            exit('your git does not seem to have a remote origin set please set or use -k key to specify the key')
+        
         return self.key
 
     def build_configure_args(self):
