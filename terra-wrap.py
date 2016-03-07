@@ -24,16 +24,16 @@ class terraform_this():
         self.prog=default_opts['prog']
         if not 'S3_REGION' in os.environ or not 'S3_BUCKET' in os.environ:
             exit('S3_REGION or S3_BUCKET  is not defined')
+        self.collect_opts()
 
     def collect_opts(self):
             parser = OptionParser(version=progvers)
             parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
-            parser.add_option("-p", "--plan", dest="plan",  help="run terraform plan")
-            parser.add_option("-a", "--apply", dest="apply", default=False , help="run terraform apply")
-            parser.add_option("-c", "--clean_config", dest= "clean_config", default= False, help="remove old configs")
+            parser.add_option("-q", "--quite", dest='quite' , action='store_true', default = False, help="try to be quite")
             (options, args) = parser.parse_args()
             self.options = options
             return options
+
     def get_git_dir(self):
         data = subprocess.Popen(['git','remote','show','-n','origin'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         data.wait()
@@ -51,36 +51,90 @@ class terraform_this():
         if self.options.key == '':
             self.get_git_dir()
             if self.key == False:
-                 exit("this does not look like a git folder , can not auto determine key please -k option")
+                if 'S3_KEY' in os.environ and self.options.quite == False:
+                    answer = ''
+                    while answer not in ['Yes','yes','No','no']:
+                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\" , use this value? Yes|No: " % os.environ.get('S3_KEY'))
+                        answer = sys.stdin.readline().rstrip()
+                    if answer in ['Yes','yes']:
+                        self.options.key = os.environ.get('S3_KEY')
+                    elif answer in ['No', 'no']:
+                        exit("this does not look like a git folder, i can not auto determine key , and you forbid me to use the S3_KEY env, please use -k|-K option")
+                elif 'S3_KEY' in os.environ and self.options.quite == True:
+                    self.options.key = os.environ.get('S3_KEY')
+                else:
+                    exit("this does not look like a git folder , can not auto determine key please -k option")
             else:
                self.options.key = self.key
 
+        if 'S3_REGION' in os.environ and self.options.quite == False:
+            answer = ''
+            while answer not in ['Yes','yes','No','no']:
+                sys.stdout.write("S3_REGION seems to  be set to: \"%s\" , use this value? Yes|No: " % os.environ.get('S3_REGION'))
+                answer = sys.stdin.readline().rstrip()
+            if answer in ['Yes','yes']:
+                self.options.region = os.environ.get('S3_REGION')
+            elif answer in ['No', 'no']:
+                exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
+        elif 'S3_REGION' in os.environ and self.options.quite == True:
+            self.options.region = os.environ.get('S3_REGION')
+        else:
+            exit("this does not look like a git folder , can not auto determine region please -k option")
+
+        if 'S3_BUCKET' in os.environ and self.options.quite == False:
+            answer = ''
+            while answer not in ['Yes','yes','No','no']:
+                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\" , use this value? Yes|No: " % os.environ.get('S3_BUCKET'))
+                answer = sys.stdin.readline().rstrip()
+            if answer in ['Yes','yes']:
+                self.options.bucket = os.environ.get('S3_BUCKET')
+            elif answer in ['No', 'no']:
+                exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
+        elif 'S3_BUCKET' in os.environ and self.options.quite == True:
+            self.options.bucket = os.environ.get('S3_BUCKET')
+        else:
+            exit("this does not look like a git folder , can not auto determine bucket please -k option")
+
     def configure(self):
         if not os.path.exists(self.path+'.terraform'):
-            args = self.build_configure_args()
-            print "CONFIGURING TERRAFORM with opts: {},{},{}".format(self.options.key,os.environ.get('S3_REGION'),os.environ.get('S3_BUCKET'))
-#            args.insert(0,self.prog)
-#            args.insert(1,'plan')
-#            child = subprocess.call(args)
+            self.build_configure_args()
+            print "CONFIGURING TERRAFORM with opts: key: {}, region: {}, bucket: {}".format(self.options.key,
+                                                                                            os.environ.get('S3_REGION'),
+                                                                                            os.environ.get('S3_BUCKET'))
+            args_plan = ["-backend=s3", 
+                        "-backend-config=bucket="+self.options.bucket,
+                        "-backend-config=region="+self.options.region,
+                        "-backend-config=key="+self.options.key,
+                    ]
+            args_plan.insert(0,self.prog)
+            args_plan.insert(1,'remote')
+            args_plan.insert(2,'config')
+            print args_plan
+            child = subprocess.call(args_plan)
 
-        else:
-            exit('error')
         pass
-    def plan(self):
+
+    def run(self):
         # call this to run terraform plan
         # need to verify if .remote is configured first
         # creates lock file to prevent accident apply will use --force-apply to ingore and remove the local lock
         self.configure()
-        args=sys.argv
-        args.pop(0)
-        args.insert(0,prog)
-        child = subprocess.call(args)
+        self.args=sys.argv
+        if 'plan' in self.args:
+            self.plan()
+        elif 'apply' in self.args:
+            self.apply()
+        else:
+            self.plan()
+
+    def plan(self):
+        args_plan = [self.prog,'plan']
+        child = subprocess.call(args_plan)
+
     def apply(self):
-        #check if lock is  present and run apply
-        pass
-    def force_apply(self):
-        #call when --force-apply is specifyed to ignore the lock file and to skip the plan part
-        pass
+        args_plan = [self.prog,'apply']
+        child = subprocess.call(args_plan)
+
     def chat_lock(self):
         # todo for v0.2 - create's chat lock 
         pass
@@ -93,5 +147,4 @@ class terraform_this():
 
 if __name__ == "__main__":
     instance = terraform_this(default_opts)
-    opts = instance.collect_opts()
-    instance.plan()
+    instance.run()
