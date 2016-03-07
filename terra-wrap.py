@@ -120,7 +120,7 @@ class terraform_this():
             args_plan = ["-backend=s3", 
                         "-backend-config=bucket="+self.options.bucket,
                         "-backend-config=region="+self.options.region,
-                        "-backend-config=key="+self.options.key,
+                        "-backend-config=key="+self.options.key+"/",
                     ]
             args_plan.insert(0,self.prog)
             args_plan.insert(1,'remote')
