@@ -69,12 +69,12 @@ class terraform_this():
             if self.key == False:
                 if 'S3_KEY' in os.environ and self.options.quite == False:
                     answer = ''
-                    while answer not in ['Yes','yes','No','no']:
-                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\" , use this value? Yes|No: " % os.environ.get('S3_KEY'))
+                    while answer not in ['Yes','yes','No','no','Y','y','N','n']:
+                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_KEY'))
                         answer = sys.stdin.readline().rstrip()
-                    if answer in ['Yes','yes']:
+                    if answer in ['Yes','yes','Y','y']:
                         self.options.key = os.environ.get('S3_KEY')
-                    elif answer in ['No', 'no']:
+                    elif answer in ['No', 'no','N','n']:
                         exit("this does not look like a git folder, i can not auto determine key , and you forbid me to use the S3_KEY env, please use -k|-K option")
                 elif 'S3_KEY' in os.environ and self.options.quite == True:
                     self.options.key = os.environ.get('S3_KEY')
@@ -85,12 +85,12 @@ class terraform_this():
 
         if 'S3_REGION' in os.environ and self.options.quite == False:
             answer = ''
-            while answer not in ['Yes','yes','No','no']:
-                sys.stdout.write("S3_REGION seems to  be set to: \"%s\" , use this value? Yes|No: " % os.environ.get('S3_REGION'))
+            while answer not in ['Yes','yes','No','no','Y','y','N','n']:
+                sys.stdout.write("S3_REGION seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_REGION'))
                 answer = sys.stdin.readline().rstrip()
-            if answer in ['Yes','yes']:
+            if answer in ['Yes','yes','Y','y']:
                 self.options.region = os.environ.get('S3_REGION')
-            elif answer in ['No', 'no']:
+            elif answer in ['No', 'no','N','n']:
                 exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
         elif 'S3_REGION' in os.environ and self.options.quite == True:
             self.options.region = os.environ.get('S3_REGION')
@@ -99,12 +99,12 @@ class terraform_this():
 
         if 'S3_BUCKET' in os.environ and self.options.quite == False:
             answer = ''
-            while answer not in ['Yes','yes','No','no']:
-                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\" , use this value? Yes|No: " % os.environ.get('S3_BUCKET'))
+            while answer not in  ['Yes','yes','No','no','Y','y','N','n']:
+                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_BUCKET'))
                 answer = sys.stdin.readline().rstrip()
-            if answer in ['Yes','yes']:
+            if answer in ['Yes','yes','Y','y']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
-            elif answer in ['No', 'no']:
+            elif answer in ['No', 'no','N','n']:
                 exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
         elif 'S3_BUCKET' in os.environ and self.options.quite == True:
             self.options.bucket = os.environ.get('S3_BUCKET')
