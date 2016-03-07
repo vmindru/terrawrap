@@ -27,7 +27,10 @@ class terraform_this():
             else:
                 exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
         else:
-            prog=os.environ.get('TERRAWRAP_PROG')
+            if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
+                prog=os.environ.get('TERRAWRAP_PROG')
+            else:
+                exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
         
         default_opts = {
                     'prog': prog,
