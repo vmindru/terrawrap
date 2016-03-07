@@ -10,12 +10,17 @@ import re
 
 
 if 'TERRAWRAP_PATH' not in os.environ:
-    path='/tmp/test/'
-else:
     path=os.getcwd()
+else:
+    path=os.environ['TERRAWRAP_PATH']
 
 if 'TERRAWRAP_PROG' not in os.environ:
-    prog='/home/vmindru/proj/terraform/terraform'
+    if os.path.exists('/usr/bin/terraform'):
+        path='/usr/bin/terraform'
+    else:
+        exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
+else:
+    path=os.environ.get['TERRAWRAP_PROG']
 
 default_opts = {
             'prog': prog,
