@@ -27,7 +27,7 @@ class terraform_this():
         self.path=default_opts['path']
         self.prog=default_opts['prog']
         if not 'S3_REGION' in os.environ or not 'S3_BUCKET' in os.environ:
-            exit('S3_REGION or S3_BUCKET  is not defined')
+            exit('S3_REGION or S3_BUCKET one or both ENV vars are not defined')
         self.collect_opts()
 
     def collect_opts(self):
@@ -114,7 +114,6 @@ class terraform_this():
             args_plan.insert(0,self.prog)
             args_plan.insert(1,'remote')
             args_plan.insert(2,'config')
-            print args_plan
             child = subprocess.call(args_plan)
 
         pass
