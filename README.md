@@ -15,7 +15,7 @@ Configure the The following environment variables are required:
 ```
 export AWS_ACCESS_KEY_ID="$your_strata_access_key"
 export AWS_SECRET_ACCESS_KEY="$your_strata_secret_key"
-export S3_REGION=eu-west-2
+export S3_REGION=us-west-2
 export S3_BUCKET=strata-terraform-state-prod
 export TERRAWRAP_PROG='$path/to/terraform/binary'
 ```
