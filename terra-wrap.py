@@ -50,7 +50,7 @@ class terraform_this():
             parser = OptionParser(version=progvers,usage='usage: %prog [-q][-k] [plan|apply]',epilog=epilog)
             parser.description='This is a terraform wrapper targeted, this will make sure you are always using S3 backned for state files'
             parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
-            parser.add_option("-q", "--quite", dest='quite' , action='store_true', default = False, help="try to be quite")
+            parser.add_option("-q", "--quiet", dest='quiet' , action='store_true', default = False, help="try to be quiet")
             (options, args) = parser.parse_args()
             self.options = options
             return options
@@ -92,7 +92,7 @@ class terraform_this():
         if self.options.key == '':
             self.get_git_dir()
             if self.key == False:
-                if 'S3_KEY' in os.environ and self.options.quite == False:
+                if 'S3_KEY' in os.environ and self.options.quiet == False:
                     answer = 'UNDEF'
                     while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
                         sys.stdout.write("S3_KEY seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_KEY'))
@@ -104,14 +104,14 @@ class terraform_this():
                     if answer in ['']:
                         self.options.key = os.environ.get('S3_KEY')
 
-                elif 'S3_KEY' in os.environ and self.options.quite == True:
+                elif 'S3_KEY' in os.environ and self.options.quiet == True:
                     self.options.key = os.environ.get('S3_KEY')
                 else:
                     exit("this does not look like a git folder , can not auto determine key please -k option")
             else:
                self.options.key = self.key
 
-        if 'S3_REGION' in os.environ and self.options.quite == False:
+        if 'S3_REGION' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
                 sys.stdout.write("S3_REGION seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_REGION'))
@@ -124,12 +124,12 @@ class terraform_this():
             if answer in ['']:
                 self.options.region = os.environ.get('S3_REGION')
 
-        elif 'S3_REGION' in os.environ and self.options.quite == True:
+        elif 'S3_REGION' in os.environ and self.options.quiet == True:
             self.options.region = os.environ.get('S3_REGION')
         else:
             exit("this does not look like a git folder , can not auto determine region please -k option")
 
-        if 'S3_BUCKET' in os.environ and self.options.quite == False:
+        if 'S3_BUCKET' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in  ['Yes','yes','No','no','Y','y','N','n','']:
                 sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_BUCKET'))
@@ -141,7 +141,7 @@ class terraform_this():
             if answer in ['']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
 
-        elif 'S3_BUCKET' in os.environ and self.options.quite == True:
+        elif 'S3_BUCKET' in os.environ and self.options.quiet == True:
             self.options.bucket = os.environ.get('S3_BUCKET')
         else:
             exit("this does not look like a git folder , can not auto determine bucket please -k option")
