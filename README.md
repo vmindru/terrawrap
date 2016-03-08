@@ -1,36 +1,56 @@
-terraform wrapper to use S3 bucket as tfstate storage
+# TerraWrap
 
-USAGE:
-    you can link this to your home e.g.
-    ln -s terra-wrap.py $HOME/bin/terrawrap
-    
-    terrawrap [-q] [-k] [plan|apply]
+## Description
 
-        Options:
-          --version          show program's version number and exit
-          -h, --help         show this help message and exit
-          -k KEY, --key=KEY  specify S3 key where to store tfstate files
-          -q, --quite        non interactive mode, be quite.
+Terraform helper/wrapper for leveraging Terraform's [remote state S3 backend](https://www.terraform.io/docs/state/remote/s3.html).
 
-You will have to setup following ENV variables 
+First run will:
+ * move `terraform.tfstate` into a `.terraform` directory.
+ * add `terraform.tfstate.backup` file and `.terraform` directory to `.gitignore`.
 
-export AWS_ACCESS_KEY_ID="$strata_access_key"
-export AWS_SECRET_ACCESS_KEY="$strata_secret_key"
-export S3_REGION=eu-west-2 
+## Setup
+
+### Environment Variables
+Configure the The following environment variables are required:
+```
+export AWS_ACCESS_KEY_ID="$your_strata_access_key"
+export AWS_SECRET_ACCESS_KEY="$your_strata_secret_key"
+export S3_REGION=eu-west-2
 export S3_BUCKET=strata-terraform-state-prod
-export TERRAWRAP_PROG='/home/vmindru/bin/terraform' # path to your terraform binnary
+export TERRAWRAP_PROG="$path/to/terraform/binary"
+```
 
-TODO:
+### Program Soft Link (Optional)
+Recommend setting up a link to the program like so:
+```
+ln -s terra-wrap.py $HOME/bin/terrawrap
+```
 
-    add [plan|apply] into help message no arg will run plan by default
+## Usage
 
-This is a WRAPPER for https://www.terraform.io/docs/state/remote/s3.html 
-terraform remote will move terraform.tfstate into .terraform folder.
+```    
+Usage: terrawrap [-q][-k] [plan|apply]
 
+This is a terraform wrapper targeted, this will make sure you are always using
+S3 backned for state files
 
-.gitignore
+Options:
+  --version          show program's version number and exit
+  -h, --help         show this help message and exit
+  -k KEY, --key=KEY  specify S3 key where to store tfstate files
+  -q, --quiet        try to be quiet
 
-    add following to .gitignore:
-    terraform.tfstate.backup
-    .terraform/
+ENV_VARS:
+AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_REGION,S3_BUCKET,TERRAWRAP_PROG
+```
 
+## TODO
+
+ * Add `[plan|apply]` to help message. __Note:__ running with no argument defaults to `plan`.
+
+## License
+
+__All Rights Reserved__ (pending review)
+
+## Authors
+  * Slava Mindru (<slava@strataconsulting.com>)
