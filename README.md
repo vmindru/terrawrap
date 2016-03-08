@@ -47,6 +47,7 @@ AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_REGION,S3_BUCKET,TERRAWRAP_PROG
 ## TODO
 
  * Add `[plan|apply]` to help message. __Note:__ running with no argument defaults to `plan`.
+ * Add S3 locking mechanism, preventing parralel runs. 
 
 ## License
 
