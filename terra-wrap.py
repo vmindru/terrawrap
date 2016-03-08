@@ -95,56 +95,56 @@ class terraform_this():
                 if 'S3_KEY' in os.environ and self.options.quiet == False:
                     answer = 'UNDEF'
                     while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
-                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_KEY'))
+                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\", use this value? Y/N: " % os.environ.get('S3_KEY'))
                         answer = sys.stdin.readline().rstrip()
                     if answer in ['Yes','yes','Y','y']:
                         self.options.key = os.environ.get('S3_KEY')
                     elif answer in ['No', 'no','N','n']:
-                        exit("this does not look like a git folder, i can not auto determine key , and you forbid me to use the S3_KEY env, please use -k|-K option")
+                        exit("This does not look like a git folder, i can not auto determine key, please use -k option")
                     if answer in ['']:
                         self.options.key = os.environ.get('S3_KEY')
 
                 elif 'S3_KEY' in os.environ and self.options.quiet == True:
                     self.options.key = os.environ.get('S3_KEY')
                 else:
-                    exit("this does not look like a git folder , can not auto determine key please -k option")
+                    exit("this does not look like a git folder, can not auto determine key please -k option")
             else:
                self.options.key = self.key
 
         if 'S3_REGION' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
-                sys.stdout.write("S3_REGION seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_REGION'))
+                sys.stdout.write("S3_REGION seems to  be set to: \"%s\", use this value? Y/N: " % os.environ.get('S3_REGION'))
                 answer = sys.stdin.readline().rstrip()
 
             if answer in ['Yes','yes','Y','y']:
                 self.options.region = os.environ.get('S3_REGION')
             elif answer in ['No', 'no','N','n']:
-                exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
+                exit("I can not auto determine bucket, please correct S3_BUCKET env var")
             if answer in ['']:
                 self.options.region = os.environ.get('S3_REGION')
 
         elif 'S3_REGION' in os.environ and self.options.quiet == True:
             self.options.region = os.environ.get('S3_REGION')
         else:
-            exit("this does not look like a git folder , can not auto determine region please -k option")
+            exit("This does not look like a git folder, cannot auto determine region please use -k option")
 
         if 'S3_BUCKET' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in  ['Yes','yes','No','no','Y','y','N','n','']:
-                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_BUCKET'))
+                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\", use this value? Y/N: " % os.environ.get('S3_BUCKET'))
                 answer = sys.stdin.readline().rstrip()
             if answer in ['Yes','yes','Y','y']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
             elif answer in ['No', 'no','N','n']:
-                exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
+                exit("I can not auto determine bucket, please correct S3_BUCKET env var")
             if answer in ['']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
 
         elif 'S3_BUCKET' in os.environ and self.options.quiet == True:
             self.options.bucket = os.environ.get('S3_BUCKET')
         else:
-            exit("this does not look like a git folder , can not auto determine bucket please -k option")
+            exit("This does not look like a git folder, can not auto determine bucket please -k option")
 
     def configure(self):
         if not os.path.exists(self.path+'.terraform'):
