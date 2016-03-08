@@ -22,15 +22,16 @@ class terraform_this():
             path=os.environ['TERRAWRAP_PATH']
         
         if 'TERRAWRAP_PROG' not in os.environ:
+            print os.environ
             if os.path.exists('/usr/bin/terraform'):
                 prog='/usr/bin/terraform'
             else:
-                exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
+                exit('TERRAWRAP_PROG env var not defined , this should be full path to your terraform binary')
         else:
             if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
                 prog=os.environ.get('TERRAWRAP_PROG')
             else:
-                exit('please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
+                exit('could not find TERRAWRAP_PROG binnary ,please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
         
         default_opts = {
                     'prog': prog,
@@ -92,14 +93,17 @@ class terraform_this():
             self.get_git_dir()
             if self.key == False:
                 if 'S3_KEY' in os.environ and self.options.quite == False:
-                    answer = ''
-                    while answer not in ['Yes','yes','No','no','Y','y','N','n']:
+                    answer = 'UNDEF'
+                    while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
                         sys.stdout.write("S3_KEY seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_KEY'))
                         answer = sys.stdin.readline().rstrip()
                     if answer in ['Yes','yes','Y','y']:
                         self.options.key = os.environ.get('S3_KEY')
                     elif answer in ['No', 'no','N','n']:
                         exit("this does not look like a git folder, i can not auto determine key , and you forbid me to use the S3_KEY env, please use -k|-K option")
+                    if answer in ['']:
+                        self.options.key = os.environ.get('S3_KEY')
+
                 elif 'S3_KEY' in os.environ and self.options.quite == True:
                     self.options.key = os.environ.get('S3_KEY')
                 else:
@@ -108,28 +112,35 @@ class terraform_this():
                self.options.key = self.key
 
         if 'S3_REGION' in os.environ and self.options.quite == False:
-            answer = ''
-            while answer not in ['Yes','yes','No','no','Y','y','N','n']:
+            answer = 'UNDEF'
+            while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
                 sys.stdout.write("S3_REGION seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_REGION'))
                 answer = sys.stdin.readline().rstrip()
+
             if answer in ['Yes','yes','Y','y']:
                 self.options.region = os.environ.get('S3_REGION')
             elif answer in ['No', 'no','N','n']:
                 exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
+            if answer in ['']:
+                self.options.region = os.environ.get('S3_REGION')
+
         elif 'S3_REGION' in os.environ and self.options.quite == True:
             self.options.region = os.environ.get('S3_REGION')
         else:
             exit("this does not look like a git folder , can not auto determine region please -k option")
 
         if 'S3_BUCKET' in os.environ and self.options.quite == False:
-            answer = ''
-            while answer not in  ['Yes','yes','No','no','Y','y','N','n']:
+            answer = 'UNDEF'
+            while answer not in  ['Yes','yes','No','no','Y','y','N','n','']:
                 sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\" , use this value? Y/N: " % os.environ.get('S3_BUCKET'))
                 answer = sys.stdin.readline().rstrip()
             if answer in ['Yes','yes','Y','y']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
             elif answer in ['No', 'no','N','n']:
                 exit("i can not auto determine bucket , pleas correct S3_BUCKET env var")
+            if answer in ['']:
+                self.options.bucket = os.environ.get('S3_BUCKET')
+
         elif 'S3_BUCKET' in os.environ and self.options.quite == True:
             self.options.bucket = os.environ.get('S3_BUCKET')
         else:
