@@ -24,7 +24,7 @@ export TERRAWRAP_PROG='$path/to/terraform/binary'
 ### Program Soft Link (Optional)
 Recommend setting up a link to the program like so:
 ```
-ln -s terra-wrap.py $HOME/bin/terrawrap
+ln -s terrawrap.py $HOME/bin/terrawrap
 ```
 
 ## Usage
