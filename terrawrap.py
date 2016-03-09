@@ -66,7 +66,7 @@ class terraform_this():
                     if match != None:
                         self.key =  match.group(0).split('.')[0].replace('/','')
                     else:
-                        exit('can not figure out the repo name base on your origin, please use -k key to specify the key')
+                        exit('Can not figure out the repo name base on your origin, please use -k key to specify the key')
         else:
             exit('Your git does not seem to have a remote origin. Please set it or use -k key to specify the key.')
 
@@ -114,7 +114,7 @@ class terraform_this():
         if 'S3_REGION' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
-                sys.stdout.write("S3_REGION seems to  be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_REGION'))
+                sys.stdout.write("S3_REGION seems to be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_REGION'))
                 answer = sys.stdin.readline().rstrip()
 
             if answer in ['Yes','yes','Y','y']:
@@ -132,7 +132,7 @@ class terraform_this():
         if 'S3_BUCKET' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in  ['Yes','yes','No','no','Y','y','N','n','']:
-                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_BUCKET'))
+                sys.stdout.write("S3_BUCKET seems to be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_BUCKET'))
                 answer = sys.stdin.readline().rstrip()
             if answer in ['Yes','yes','Y','y']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
