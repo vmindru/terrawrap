@@ -31,7 +31,7 @@ class terraform_this():
             if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
                 prog=os.environ.get('TERRAWRAP_PROG')
             else:
-                exit('could not find TERRAWRAP_PROG binnary ,please define TERRAWRAP_PROG env var , this should be full path to your terraform binary')
+                exit('could not find TERRAWRAP_PROG binnary ,please define TERRAWRAP_PROG env var, this should be full path to your terraform binary')
         
         default_opts = {
                     'prog': prog,
@@ -66,9 +66,9 @@ class terraform_this():
                     if match != None:
                         self.key =  match.group(0).split('.')[0].replace('/','')
                     else:
-                        exit('can not figure out the repo name base on your origin, please use  -k key to specify the key')
+                        exit('can not figure out the repo name base on your origin, please use -k key to specify the key')
         else:
-            exit('your git does not seem to have a remote origin set please set or use -k key to specify the key')
+            exit('Your git does not seem to have a remote origin. Please set it or use -k key to specify the key.')
 
         #let's find out the relative path to the .git base this will be used to compound the S3_KEY
         data = subprocess.Popen(['git','rev-parse','--show-toplevel'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -77,7 +77,7 @@ class terraform_this():
             self.top_level_path, err = data.communicate()
             self.top_level_path =  self.top_level_path.rstrip()
         else:
-            exit('can not determine the relative path, please issue a BUG to vmindru')
+            exit('Can not determine the relative path, please create an issue at https://github.com/strataconsulting/terrawrap/ .')
 
         #print "self.key: {} , self.top_level_path: {}, self.path: {}".format(self.key, self.top_level_path, self.path)
         # CONVERT STRING TO ARRAY AND SUBSTRACT THE RELATIVE PATH 
@@ -95,7 +95,7 @@ class terraform_this():
                 if 'S3_KEY' in os.environ and self.options.quiet == False:
                     answer = 'UNDEF'
                     while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
-                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\", use this value? Y/N: " % os.environ.get('S3_KEY'))
+                        sys.stdout.write("S3_KEY seems to  be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_KEY'))
                         answer = sys.stdin.readline().rstrip()
                     if answer in ['Yes','yes','Y','y']:
                         self.options.key = os.environ.get('S3_KEY')
@@ -114,7 +114,7 @@ class terraform_this():
         if 'S3_REGION' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
-                sys.stdout.write("S3_REGION seems to  be set to: \"%s\", use this value? Y/N: " % os.environ.get('S3_REGION'))
+                sys.stdout.write("S3_REGION seems to  be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_REGION'))
                 answer = sys.stdin.readline().rstrip()
 
             if answer in ['Yes','yes','Y','y']:
@@ -132,7 +132,7 @@ class terraform_this():
         if 'S3_BUCKET' in os.environ and self.options.quiet == False:
             answer = 'UNDEF'
             while answer not in  ['Yes','yes','No','no','Y','y','N','n','']:
-                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\", use this value? Y/N: " % os.environ.get('S3_BUCKET'))
+                sys.stdout.write("S3_BUCKET seems to  be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_BUCKET'))
                 answer = sys.stdin.readline().rstrip()
             if answer in ['Yes','yes','Y','y']:
                 self.options.bucket = os.environ.get('S3_BUCKET')
@@ -167,7 +167,7 @@ class terraform_this():
     def run(self):
         # call this to run terraform plan
         # need to verify if .remote is configured first
-        # creates lock file to prevent accident apply will use --force-apply to ingore and remove the local lock
+        # creates lock file to prevent accident apply will use --force-apply to ignore and remove the local lock
         self.configure()
         self.args=sys.argv
         if 'plan' in self.args:
@@ -185,14 +185,14 @@ class terraform_this():
         args_plan = [self.prog,'apply']
         child = subprocess.call(args_plan)
 
-    def chat_lock(self):
-        # todo for v0.2 - create's chat lock 
+    def s3_lock(self):
+        # todo for v0.2 - create's s3  lock 
         pass
-    def chat_lock_release(self):
-        # TODO FOR v0.2 - release chat lockl
+    def s3_lock_release(self):
+        # TODO FOR v0.2 - release s3 lock
         pass
-    def chat_lock_force_release(self):
-        # TODO FOR v0.2 - force release chat lock if  exists when --force-apply and call chat_locl_release()
+    def s3_lock_force_release(self):
+        # TODO FOR v0.2 - force release s3 lock if exists when --force-apply and call s3_lock_release()
         pass
 
 if __name__ == "__main__":
