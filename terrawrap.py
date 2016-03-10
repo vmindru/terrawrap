@@ -175,7 +175,7 @@ class terraform_this():
         elif 'apply' in self.args:
             self.configure()
             self.apply()
-        elif 'get':
+        elif 'get' in self.args:
             self.get()
         else:
             self.configure()
