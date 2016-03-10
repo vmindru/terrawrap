@@ -22,7 +22,6 @@ class terraform_this():
             path=os.environ['TERRAWRAP_PATH']
         
         if 'TERRAWRAP_PROG' not in os.environ:
-            print os.environ
             if os.path.exists('/usr/bin/terraform'):
                 prog='/usr/bin/terraform'
             else:
