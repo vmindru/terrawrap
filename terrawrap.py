@@ -22,15 +22,18 @@ class terraform_this():
             path=os.environ['TERRAWRAP_PATH']
         
         if 'TERRAWRAP_PROG' not in os.environ:
-            if os.path.exists('/usr/bin/terraform'):
-                prog='/usr/bin/terraform'
-            else:
-                exit('TERRAWRAP_PROG env var not defined, this should be full path to your terraform binary')
+            for file in os.environ['PATH'].split(':'):
+                check_prog = file+'/terraform'
+                if os.path.isfile(check_prog):
+                    prog=file+'/terraform'
+                    break
+                else:
+                    exit('Terraform binnary not found')
         else:
             if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
                 prog=os.environ.get('TERRAWRAP_PROG')
             else:
-                exit('could not find TERRAWRAP_PROG binnary ,please define TERRAWRAP_PROG env var, this should be full path to your terraform binary')
+                exit('Terraform binnary missing, verify TERRAWRAP_PROG env var, this should be full path to your terraform binary')
         
         default_opts = {
                     'prog': prog,
