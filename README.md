@@ -97,3 +97,5 @@ __All Rights Reserved__ (pending review)
 
 ## Authors
   * Slava Mindru (<slava@strataconsulting.com>)
+  * Alex Romanov (<aromanov@strataconsulting.com>)
+  * Todd Michael Bushnell (<todd@strataconsulting.com>)
