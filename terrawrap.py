@@ -1,12 +1,12 @@
-#!/usr/bin/python 
-
-progvers = "%prog 0.1"
+#!/usr/bin/env python
 
 from optparse import OptionParser
 import sys
 import os
 import subprocess
 import re
+
+progvers = "%prog 0.1"
 
 
 class terraform_this():
@@ -15,88 +15,87 @@ class terraform_this():
         self.init_default_opts()
 
     def init_default_opts(self):
-
         if 'TERRAWRAP_PATH' not in os.environ:
-            path=os.getcwd()
+            path = os.getcwd()
         else:
-            path=os.environ['TERRAWRAP_PATH']
-        
+            path = os.environ['TERRAWRAP_PATH']
+
         if 'TERRAWRAP_PROG' not in os.environ:
             if os.path.exists('/usr/bin/terraform'):
-                prog='/usr/bin/terraform'
+                prog = '/usr/bin/terraform'
             else:
                 exit('TERRAWRAP_PROG env var not defined, this should be full path to your terraform binary')
         else:
             if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
-                prog=os.environ.get('TERRAWRAP_PROG')
+                prog = os.environ.get('TERRAWRAP_PROG')
             else:
                 exit('could not find TERRAWRAP_PROG binnary ,please define TERRAWRAP_PROG env var, this should be full path to your terraform binary')
-        
+
         default_opts = {
                     'prog': prog,
                     'path': path,
                 }
-        self.path=default_opts['path']
-        self.prog=default_opts['prog']
-        
+        self.path = default_opts['path']
+        self.prog = default_opts['prog']
+
         if not 'S3_REGION' in os.environ or not 'S3_BUCKET' in os.environ:
             exit('S3_REGION or S3_BUCKET one or both ENV vars are not defined')
-        
-        self.default_opts = default_opts 
+
+        self.default_opts = default_opts
 
     def collect_opts(self):
-            epilog="""ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_REGION,S3_BUCKET,TERRAWRAP_PROG"""
-            parser = OptionParser(version=progvers,usage='usage: %prog [-q][-k] [plan|apply|get]',epilog=epilog)
-            parser.description='This is a terraform wrapper targeted, this will make sure you are always using S3 backned for state files'
-            parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
-            parser.add_option("-q", "--quiet", dest='quiet' , action='store_true', default = False, help="try to be quiet")
+            epilog = """ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_REGION,S3_BUCKET,TERRAWRAP_PROG"""
+            parser = OptionParser(version=progvers, usage='usage: %prog [-q][-k] [plan|apply|get]', epilog=epilog)
+            parser.description = 'This is a terraform wrapper targeted, this will make sure you are always using S3 backned for state files'
+            parser.add_option("-k", "--key", dest="key", default='', help="specify S3 key where to store tfstate files")
+            parser.add_option("-q", "--quiet", dest='quiet', action='store_true', default=False, help="try to be quiet")
             (options, args) = parser.parse_args()
             self.options = options
             return options
 
     def get_git_dir(self):
-        data = subprocess.Popen(['git','remote','show','-n','origin'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        data = subprocess.Popen(['git', 'remote', 'show', '-n', 'origin'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         data.wait()
         if data.returncode == 0:
             out, err = data.communicate()
             for line in out.splitlines():
                 if 'Fetch' in line:
-                    match = re.search('\/.*',line)
-                    if match != None:
-                        self.key =  match.group(0).split('.')[0].replace('/','')
+                    match = re.search('\/.*', line)
+                    if match is not None:
+                        self.key = match.group(0).split('.')[0].replace('/', '')
                     else:
                         exit('Can not figure out the repo name base on your origin, please use -k key to specify the key')
         else:
             exit('Your git does not seem to have a remote origin. Please set it or use -k key to specify the key.')
 
-        #let's find out the relative path to the .git base this will be used to compound the S3_KEY
-        data = subprocess.Popen(['git','rev-parse','--show-toplevel'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # let's find out the relative path to the .git base this will be used to compound the S3_KEY
+        data = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         data.wait()
         if data.returncode == 0:
             self.top_level_path, err = data.communicate()
-            self.top_level_path =  self.top_level_path.rstrip()
+            self.top_level_path = self.top_level_path.rstrip()
         else:
             exit('Can not determine the relative path, please create an issue at https://github.com/strataconsulting/terrawrap/ .')
 
-        #print "self.key: {} , self.top_level_path: {}, self.path: {}".format(self.key, self.top_level_path, self.path)
+        # print "self.key: {} , self.top_level_path: {}, self.path: {}".format(self.key, self.top_level_path, self.path)
         # CONVERT STRING TO ARRAY AND SUBSTRACT THE RELATIVE PATH 
         s0 = self.path.split('/')
         s1 = self.top_level_path.split('/')
         for item in s1:
             s0.remove(item)
-        self.relative_path =  "/".join(s0)
+        self.relative_path = "/".join(s0)
         return self.key
 
     def build_configure_args(self):
         if self.options.key == '':
             self.get_git_dir()
-            if self.key == False:
-                if 'S3_KEY' in os.environ and self.options.quiet == False:
+            if self.key is False:
+                if 'S3_KEY' in os.environ and self.options.quiet is False:
                     answer = 'UNDEF'
-                    while answer not in ['Yes','yes','No','no','Y','y','N','n','']:
+                    while answer not in ['Yes', 'yes', 'No', 'no', 'Y', 'y', 'N', 'n', '']:
                         sys.stdout.write("S3_KEY seems to  be set to: \"%s\", use this value? Y/n: " % os.environ.get('S3_KEY'))
                         answer = sys.stdin.readline().rstrip()
-                    if answer in ['Yes','yes','Y','y']:
+                    if answer in ['Yes', 'yes', 'Y', 'y']:
                         self.options.key = os.environ.get('S3_KEY')
                     elif answer in ['No', 'no','N','n']:
                         exit("This does not look like a git folder, i can not auto determine key, please use -k option")
