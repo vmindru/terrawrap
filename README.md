@@ -30,7 +30,7 @@ ln -s terrawrap.py $HOME/bin/terrawrap
 ## Usage
 
 ```    
-Usage: terrawrap [-q][-k] [plan|apply]
+Usage: terrawrap [-q][-k] [plan|apply|get]
 
 This is a terraform wrapper targeted to ensure you are always using
 S3 backned for state files
@@ -88,7 +88,7 @@ Changes not staged for commit:
 ## TODO
 
  * Add statefile locking mechanism
- * Add `[plan|apply]` to help message. __Note:__ running with no argument defaults to `plan`.
+ * __Note:__ running with no argument defaults to `plan`.
  * Add S3 locking mechanism, preventing parallel runs. 
 
 ## License

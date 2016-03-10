@@ -47,7 +47,7 @@ class terraform_this():
 
     def collect_opts(self):
             epilog="""ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_REGION,S3_BUCKET,TERRAWRAP_PROG"""
-            parser = OptionParser(version=progvers,usage='usage: %prog [-q][-k] [plan|apply]',epilog=epilog)
+            parser = OptionParser(version=progvers,usage='usage: %prog [-q][-k] [plan|apply|get]',epilog=epilog)
             parser.description='This is a terraform wrapper targeted, this will make sure you are always using S3 backned for state files'
             parser.add_option("-k", "--key", dest = "key" , default='', help="specify S3 key where to store tfstate files")
             parser.add_option("-q", "--quiet", dest='quiet' , action='store_true', default = False, help="try to be quiet")
@@ -168,13 +168,17 @@ class terraform_this():
         # call this to run terraform plan
         # need to verify if .remote is configured first
         # creates lock file to prevent accident apply will use --force-apply to ignore and remove the local lock
-        self.configure()
-        self.args=sys.argv
+        self.args = sys.argv
         if 'plan' in self.args:
+            self.configure()
             self.plan()
         elif 'apply' in self.args:
+            self.configure()
             self.apply()
+        elif 'get':
+            self.get()
         else:
+            self.configure()
             self.plan()
 
     def plan(self):
@@ -183,6 +187,10 @@ class terraform_this():
 
     def apply(self):
         args_plan = [self.prog,'apply']
+        child = subprocess.call(args_plan)
+
+    def get(self):
+        args_plan = [self.prog, 'get' ]
         child = subprocess.call(args_plan)
 
     def s3_lock(self):
