@@ -84,12 +84,12 @@ Changes not staged for commit:
 
 	deleted:    terraform.tfstate
 ```
+__Note:__ running with no argument defaults to `plan`.
 
 ## TODO
 
- * Add statefile locking mechanism
- * __Note:__ running with no argument defaults to `plan`.
  * Add S3 locking mechanism, preventing parallel runs. 
+ * Key should be created git_repo_name+git_tag+relative_path insted of simple git_repo_name+relative_path
 
 ## License
 
