@@ -1,5 +1,7 @@
 # TerraWrap
 
+[![Code Climate](https://codeclimate.com/repos/56ec2557866fa215bf0031d2/badges/73bac2f23c90fdc377a7/gpa.svg)](https://codeclimate.com/repos/56ec2557866fa215bf0031d2/feed) [![Issue Count](https://codeclimate.com/repos/56ec2557866fa215bf0031d2/badges/73bac2f23c90fdc377a7/issue_count.svg)](https://codeclimate.com/repos/56ec2557866fa215bf0031d2/feed)
+
 ## Description
 
 Terraform helper/wrapper for leveraging Terraform's [remote state S3 backend](https://www.terraform.io/docs/state/remote/s3.html).
