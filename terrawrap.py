@@ -6,7 +6,7 @@ import os
 import subprocess
 import re
 
-progvers = "%prog 0.1"
+progvers = "%prog 0.2"
 
 
 class terraform_this():
@@ -34,8 +34,7 @@ class terraform_this():
                      'TERRAWRAP_PROG env var, this should be full path to your'
                      ' terraform binary')
 
-        default_opts = {
-                        "prog": prog,
+        default_opts = {"prog": prog,
                         "path": path,
                         }
         self.path = default_opts['path']
@@ -47,30 +46,41 @@ class terraform_this():
         self.default_opts = default_opts
 
     def collect_opts(self):
-            epilog = ("ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,"
-                      "S3_REGION,S3_BUCKET,TERRAWRAP_PROG")
-            parser = OptionParser(version=progvers,
-                                  usage=("usage: %prog [-q][-k]"
-                                         "[plan|apply|get]"),
-                                  epilog = epilog
-                                  )
-            parser.description = ('This is a terraform wrapper targeted, this '
-                                  'will make sure you are always using S3'
-                                  'backned for state files')
-            parser.add_option("-k",
-                              "--key",
-                              dest="key",
-                              default='',
-                              help="specify S3 key where to \
-                                    store tfstate files")
-            parser.add_option("-q",
-                              "--quiet",
-                              dest='quiet',
-                              action='store_true',
-                              default=False, help="try to be quiet")
-            (options, args) = parser.parse_args()
-            self.options = options
-            return options
+        epilog = ("ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,"
+                  "S3_REGION,S3_BUCKET,TERRAWRAP_PROG")
+        parser = OptionParser(version=progvers,
+                              usage=("usage: %prog [-q][-k]"
+                                     "[plan|apply|get]"),
+                              epilog = epilog
+                              )
+        parser.description = ('This is a terraform wrapper targeted, this '
+                              'will make sure you are always using S3'
+                              'backned for state files')
+        parser.add_option("-k",
+                          "--key",
+                          dest="key",
+                          default='',
+                          help="specify S3 key where to \
+                                store tfstate files")
+        parser.add_option("-q",
+                          "--quiet",
+                          dest='quiet',
+                          action='store_true',
+                          default=False, help="try to be quiet")
+        parser.add_option("-a",
+                          "--action",
+                          dest='action',
+                          default='plan',
+                          help="specify action plan|apply|get")
+        parser.add_option("-e",
+                          "--extra",
+                          dest='extra',
+                          action='append',
+                          default=[],
+                          help="specify action plan|apply|get")
+        (options, args) = parser.parse_args()
+        self.options = options
+        return options
 
     def get_git_dir(self):
         data = subprocess.Popen(['git', 'remote', 'show', '-n', 'origin'],
@@ -83,7 +93,9 @@ class terraform_this():
                 if 'Fetch' in line:
                     match = re.search('\/.*', line)
                     if match is not None:
-                        self.key = match.group(0).split('.')[0].replace('/', '')
+                        self.key = match.group(0).split('.')[0]
+                        self.key.replace('/', '')
+
                     else:
                         exit('Can not figure out the repo name base on your '
                              'origin, please use -k key to specify the key')
@@ -115,6 +127,9 @@ class terraform_this():
         return self.key
 
     def build_configure_args(self):
+        # DEFAULT THE RELATIVE PATH TO '' IN CASE YOU ARE RUNNING THIS FOR NON
+        # GIT with -K option
+        self.relative_path = ''
         if self.options.key == '':
             self.get_git_dir()
             if self.key is False:
@@ -200,7 +215,9 @@ class terraform_this():
             args_plan = ["-backend=s3",
                          "-backend-config=bucket="+self.options.bucket,
                          "-backend-config=region="+self.options.region,
-                         "-backend-config=key="+self.options.key+"/"+self.relative_path+"/terraform.tfstate",
+                         "-backend-config=key="+self.options.key+"/" +
+                         self.relative_path +
+                         "/terraform.tfstate",
                          ]
             args_plan.insert(0, self.prog)
             args_plan.insert(1, 'remote')
@@ -210,10 +227,6 @@ class terraform_this():
         pass
 
     def run(self):
-        # call this to run terraform plan
-        # need to verify if .remote is configured first
-        # creates lock file to prevent accident apply will use --force-apply
-        # to ignore and remove the local lock
         self.args = sys.argv
         if 'plan' in self.args:
             self.configure()
@@ -228,11 +241,11 @@ class terraform_this():
             self.plan()
 
     def plan(self):
-        args_plan = [self.prog, 'plan']
+        args_plan = [self.prog, 'plan']+self.options.extra
         subprocess.call(args_plan)
 
     def apply(self):
-        args_plan = [self.prog, 'apply']
+        args_plan = [self.prog, 'apply']+self.options.extra
         subprocess.call(args_plan)
 
     def get(self):
@@ -240,15 +253,15 @@ class terraform_this():
         subprocess.call(args_plan)
 
     def s3_lock(self):
-        # todo for v0.2 - create's s3  lock
+        # todo for v0.3 - create's s3  lock
         pass
 
     def s3_lock_release(self):
-        # TODO FOR v0.2 - release s3 lock
+        # TODO FOR v0.3 - release s3 lock
         pass
 
     def s3_lock_force_release(self):
-        # TODO FOR v0.2 - force release s3 lock if exists when --force-apply
+        # TODO FOR v0.3 - force release s3 lock if exists when --force-apply
         # and call s3_lock_release()
         pass
 
