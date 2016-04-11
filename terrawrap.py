@@ -226,6 +226,13 @@ class terraform_this():
 
         pass
 
+    def make_extras(self):
+        self.extra_args = []
+        for item in self.options.extra:
+            new_item = item.split()
+            self.extra_args.extend(new_item)
+        return self.extra_args
+
     def run(self):
         self.args = sys.argv
         if 'plan' in self.args:
@@ -235,21 +242,23 @@ class terraform_this():
             self.configure()
             self.apply()
         elif 'get' in self.args:
+            self.configure()
             self.get()
         else:
             self.configure()
             self.plan()
 
     def plan(self):
-        args_plan = [self.prog, 'plan']+self.options.extra
+        args_plan = [self.prog, 'plan']+self.make_extras()
         subprocess.call(args_plan)
+        print args_plan
 
     def apply(self):
-        args_plan = [self.prog, 'apply']+self.options.extra
+        args_plan = [self.prog, 'apply']+self.make_extras()
         subprocess.call(args_plan)
 
     def get(self):
-        args_plan = [self.prog, 'get']
+        args_plan = [self.prog, 'get']+self.make_extras()
         subprocess.call(args_plan)
 
     def s3_lock(self):
