@@ -77,7 +77,9 @@ class terraform_this():
                           dest='extra',
                           action='append',
                           default=[],
-                          help="specify action plan|apply|get")
+                          help="specify native terraform options e.g. too pass\
+                                -var foo=bar specify terrawrap --extra '-var\
+                                foo=bar'")
         (options, args) = parser.parse_args()
         self.options = options
         return options
