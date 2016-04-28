@@ -9,6 +9,13 @@ import re
 progvers = "%prog 0.2"
 
 
+class tcol:
+    YELLOW = '\033[33m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 class terraform_this():
     def __init__(self):
         self.collect_opts()
@@ -238,12 +245,15 @@ class terraform_this():
     def run(self):
         self.args = sys.argv
         if 'plan' in self.args:
+            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             self.configure()
             self.plan()
         elif 'apply' in self.args:
+            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             self.configure()
             self.apply()
         elif 'get' in self.args:
+            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             self.configure()
             self.get()
         else:
@@ -252,15 +262,20 @@ class terraform_this():
 
     def plan(self):
         args_plan = [self.prog, 'plan']+self.make_extras()
+        print tcol.YELLOW+tcol.BOLD+"running terraform with " \
+            "args "+tcol.ENDC+str(args_plan)
         subprocess.call(args_plan)
-        print args_plan
 
     def apply(self):
         args_plan = [self.prog, 'apply']+self.make_extras()
+        print tcol.YELLOW+tcol.BOLD+"running terraform with " \
+            "args "+tcol.ENDC+str(args_plan)
         subprocess.call(args_plan)
 
     def get(self):
         args_plan = [self.prog, 'get']+self.make_extras()
+        print tcol.YELLOW+tcol.BOLD+"running terraform with " \
+            "args "+tcol.ENDC+str(args_plan)
         subprocess.call(args_plan)
 
     def s3_lock(self):
