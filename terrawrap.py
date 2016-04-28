@@ -216,6 +216,7 @@ class terraform_this():
     def configure(self):
         if not os.path.exists(self.path+'.terraform'):
             self.build_configure_args()
+            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
                    "ket: {}").format(self.options.key,
                                      os.environ.get('S3_REGION'),
@@ -245,15 +246,12 @@ class terraform_this():
     def run(self):
         self.args = sys.argv
         if 'plan' in self.args:
-            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             self.configure()
             self.plan()
         elif 'apply' in self.args:
-            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             self.configure()
             self.apply()
         elif 'get' in self.args:
-            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
             self.configure()
             self.get()
         else:
