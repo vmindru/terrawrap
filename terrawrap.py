@@ -6,7 +6,7 @@ import os
 import subprocess
 import re
 
-progvers = "%prog 0.2"
+progvers = "%prog 0.2.1"
 
 
 class tcol:
