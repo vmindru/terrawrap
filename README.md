@@ -95,7 +95,7 @@ __Note:__ running with no argument defaults to `plan`.
 
 ## License
 
-__All Rights Reserved__ (pending review)
+__Apache License__
 
 ## Authors
   * Slava Mindru (<slava@strataconsulting.com>)
