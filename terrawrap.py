@@ -16,80 +16,93 @@ class tcol:
     UNDERLINE = '\033[4m'
 
 
-class terraform_this():
+
+class get_opts():
     def __init__(self):
-        self.collect_opts()
-        self.init_default_opts()
-
-    def init_default_opts(self):
-        if 'TERRAWRAP_PATH' not in os.environ:
-            path = os.getcwd()
-        else:
-            path = os.environ['TERRAWRAP_PATH']
-
-        if 'TERRAWRAP_PROG' not in os.environ:
-            if os.path.exists('/usr/bin/terraform'):
-                prog = '/usr/bin/terraform'
+            self.collect_opts()
+            self.init_default_params()
+    
+    def init_default_params(self):
+            if 'TERRAWRAP_PATH' not in os.environ:
+                path = os.getcwd()
             else:
-                exit('TERRAWRAP_PROG env var not defined, this should be full '
-                     'path to your terraform binary')
-        else:
-            if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
-                prog = os.environ.get('TERRAWRAP_PROG')
+                path = os.environ['TERRAWRAP_PATH']
+    
+            if 'TERRAWRAP_PROG' not in os.environ:
+                if os.path.exists('/usr/bin/terraform'):
+                    prog = '/usr/bin/terraform'
+                else:
+                    exit('TERRAWRAP_PROG env var not defined, this should be full '
+                         'path to your terraform binary')
             else:
-                exit('could not find TERRAWRAP_PROG binnary ,please define '
-                     'TERRAWRAP_PROG env var, this should be full path to your'
-                     ' terraform binary')
-
-        default_opts = {"prog": prog,
-                        "path": path,
-                        }
-        self.path = default_opts['path']
-        self.prog = default_opts['prog']
-
-        if not 'S3_REGION' in os.environ or not 'S3_BUCKET' in os.environ:
-            exit('S3_REGION or S3_BUCKET one or both ENV vars are not defined')
-
-        self.default_opts = default_opts
-
+                if os.path.exists(os.environ.get('TERRAWRAP_PROG')):
+                    prog = os.environ.get('TERRAWRAP_PROG')
+                else:
+                    exit('could not find TERRAWRAP_PROG binnary ,please define '
+                         'TERRAWRAP_PROG env var, this should be full path to your'
+                         ' terraform binary')
+    
+            default_params = {"prog": prog,
+                            "path": path,
+                            }
+    
+    
+            self.default_params = default_params
+    
     def collect_opts(self):
-        epilog = ("ENV_VARS: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,"
-                  "S3_REGION,S3_BUCKET,TERRAWRAP_PROG")
-        parser = OptionParser(version=progvers,
-                              usage=("usage: %prog [-q][-k]"
-                                     "[plan|apply|get]"),
-                              epilog = epilog
-                              )
-        parser.description = ('This is a terraform wrapper targeted, this '
-                              'will make sure you are always using S3'
-                              'backned for state files')
-        parser.add_option("-k",
-                          "--key",
-                          dest="key",
-                          default='',
-                          help="specify S3 key where to \
-                                store tfstate files")
-        parser.add_option("-q",
-                          "--quiet",
-                          dest='quiet',
-                          action='store_true',
-                          default=False, help="try to be quiet")
-        parser.add_option("-a",
-                          "--action",
-                          dest='action',
-                          default='plan',
-                          help="specify action plan|apply|get")
-        parser.add_option("-e",
-                          "--extra",
-                          dest='extra',
-                          action='append',
-                          default=[],
-                          help="specify native terraform options e.g. too pass\
-                                -var foo=bar specify terrawrap --extra '-var\
-                                foo=bar'")
-        (options, args) = parser.parse_args()
+            parser = OptionParser(version=progvers,
+                                  usage=("usage: %prog [-q][-k]"
+                                         "[plan|apply|get]"),
+                                  )
+            parser.description = ('This is a terraform wrapper targeted, this '
+                                  'will make sure you are always using state'
+                                  'backned like s3, swift or http for state files')
+            parser.add_option("-k",
+                              "--key",
+                              dest="key",
+                              default='',
+                              help="specify S3 key where to \
+                                    store tfstate files")
+            parser.add_option("-q",
+                              "--quiet",
+                              dest='quiet',
+                              action='store_true',
+                              default=False, help="reduce verbosity to quiet")
+            parser.add_option("-a",
+                              "--action",
+                              dest='action',
+                              default='plan',
+                              help="specify action plan|apply|get")
+            parser.add_option("-e",
+                              "--extra",
+                              dest='extra',
+                              action='append',
+                              default=[],
+                              help="specify native terraform options e.g. too pass\
+                                    -var foo=bar specify terrawrap --extra '-var\
+                                    foo=bar'")
+            parser.add_option("-b",
+                              "--backend",
+                              dest='backend',
+                              default='s3',
+                              help="specify our remote state backend, you can get\
+                                    more details on terraform documentation page\
+                                    https://www.terraform.io/docs/state/remote")
+                                    
+            
+            (options, args) = parser.parse_args()
+            self.options = options
+    
+
+
+
+
+class terraform_this():
+    def __init__(self,parameters,options):
+        self.path = parameters['path']
+        self.prog = parameters['prog']
         self.options = options
-        return options
+       
 
     def get_git_dir(self):
         data = subprocess.Popen(['git', 'remote', 'show', '-n', 'origin'],
@@ -214,29 +227,35 @@ class terraform_this():
                  "determine bucket please -k option")
 
     def configure(self):
-        if not os.path.exists(self.path+'.terraform'):
-            self.build_configure_args()
-            print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
-            print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
-                   "ket: {}").format(self.options.key,
-                                     os.environ.get('S3_REGION'),
-                                     os.environ.get('S3_BUCKET')
-                                     )
-            args_plan = ["-backend=s3",
-                         "-backend-config=bucket="+self.options.bucket,
-                         "-backend-config=region="+self.options.region,
-                         "-backend-config=key="+self.options.key+"/" +
-                         self.relative_path +
-                         "/terraform.tfstate",
-                         ]
-            args_plan.insert(0, self.prog)
-            args_plan.insert(1, 'remote')
-            args_plan.insert(2, 'config')
-            subprocess.call(args_plan)
+    # BEFORE EVERY RUN , TERRAFORM WILL MAKE SURE OUR STATE BACKEND IS CONFIGURED
+    # IT WILL PREPARE THE ARGS AND CALL terraform remote config WITH COMPUTED ARGS
+        if self.options['backend'] == 's3':
+            if not os.path.exists(self.path+'.terraform'):
+                self.build_configure_args()
+                print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
+                print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
+                       "ket: {}").format(self.options.key,
+                                         os.environ.get('S3_REGION'),
+                                         os.environ.get('S3_BUCKET')
+                                         )
+                subprocess_args = ["-backend=s3",
+                             "-backend-config=bucket="+self.options.bucket,
+                             "-backend-config=region="+self.options.region,
+                             "-backend-config=key="+self.options.key+"/" +
+                             self.relative_path +
+                             "/terraform.tfstate",
+                             ]
+                subprocess_args.insert(0, self.prog)
+                subprocess_args.insert(1, 'remote')
+                subprocess_args.insert(2, 'config')
+                subprocess.call(subprocess_args)
 
         pass
 
     def make_extras(self):
+    # CREATE EXTRA ARGS THAT ARE GOING TO BE PASSED TO TERRAFORM e.g to pass 
+    # any terraform native option e.g. -module or -refresh or -state etc
+    # was created to add -var of -var-file
         self.extra_args = []
         for item in self.options.extra:
             new_item = item.split()
@@ -245,36 +264,33 @@ class terraform_this():
 
     def run(self):
         self.args = sys.argv
+        self.configure()
         if 'plan' in self.args:
-            self.configure()
             self.plan()
         elif 'apply' in self.args:
-            self.configure()
             self.apply()
         elif 'get' in self.args:
-            self.configure()
             self.get()
         else:
-            self.configure()
             self.plan()
 
     def plan(self):
-        args_plan = [self.prog, 'plan']+self.make_extras()
+        subprocess_args = [self.prog, 'plan']+self.make_extras()
         print tcol.YELLOW+tcol.BOLD+"running terraform with " \
-            "args "+tcol.ENDC+str(args_plan)
-        subprocess.call(args_plan)
+            "args "+tcol.ENDC+str(subprocess_args)
+        subprocess.call(subprocess_args)
 
     def apply(self):
-        args_plan = [self.prog, 'apply']+self.make_extras()
+        subprocess_args = [self.prog, 'apply']+self.make_extras()
         print tcol.YELLOW+tcol.BOLD+"running terraform with " \
-            "args "+tcol.ENDC+str(args_plan)
-        subprocess.call(args_plan)
+            "args "+tcol.ENDC+str(subprocess_args)
+        subprocess.call(subprocess_args)
 
     def get(self):
-        args_plan = [self.prog, 'get']+self.make_extras()
+        subprocess_args = [self.prog, 'get']+self.make_extras()
         print tcol.YELLOW+tcol.BOLD+"running terraform with " \
-            "args "+tcol.ENDC+str(args_plan)
-        subprocess.call(args_plan)
+            "args "+tcol.ENDC+str(subprocess_args)
+        subprocess.call(subprocess_args)
 
     def s3_lock(self):
         # todo for v0.3 - create's s3  lock
@@ -290,5 +306,12 @@ class terraform_this():
         pass
 
 if __name__ == "__main__":
-    instance = terraform_this()
+    opts = get_opts()
+    parameters  = opts.default_params
+    options = opts.options
+    print options
+    print parameters
+    print options['backend']
+    instance = terraform_this(parameters,options)
     instance.run()
+
