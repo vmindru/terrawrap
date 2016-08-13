@@ -92,19 +92,22 @@ class get_opts():
             
             (options, args) = parser.parse_args()
             self.options = options
-    
-
+            self.args = args 
 
 
 
 class terraform_this():
-    def __init__(self,parameters,options):
+    def __init__(self,parameters,options,args):
         self.path = parameters['path']
         self.prog = parameters['prog']
         self.options = options
+        self.args = args 
        
 
-    def get_git_dir(self):
+    def get_key(self):
+    # try to auto figure out the key , if no GIT origin is present we will ask to
+    # inpute -k option 
+    #TODO: change this to simple check of the file insted of calling the GIT command
         data = subprocess.Popen(['git', 'remote', 'show', '-n', 'origin'],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
@@ -138,8 +141,6 @@ class terraform_this():
             exit('Can not determine the relative path, please create an issue'
                  ' at https://github.com/strataconsulting/terrawrap/ .')
 
-        # print "self.key: {} , self.top_level_path: {}, self.path:
-        #{}".format(self.key, self.top_level_path, self.path)
         # CONVERT STRING TO ARRAY AND SUBSTRACT THE RELATIVE PATH
         s0 = self.path.split('/')
         s1 = self.top_level_path.split('/')
@@ -153,7 +154,7 @@ class terraform_this():
         # GIT with -K option
         self.relative_path = ''
         if self.options.key == '':
-            self.get_git_dir()
+            self.get_key()
             if self.key is False:
                 if 'S3_KEY' in os.environ and self.options.quiet is False:
                     answer = 'UNDEF'
@@ -226,10 +227,10 @@ class terraform_this():
             exit("This does not look like a git folder, can not auto "
                  "determine bucket please -k option")
 
-    def configure(self):
+    def subprocess_args(self):
     # BEFORE EVERY RUN , TERRAFORM WILL MAKE SURE OUR STATE BACKEND IS CONFIGURED
     # IT WILL PREPARE THE ARGS AND CALL terraform remote config WITH COMPUTED ARGS
-        if self.options['backend'] == 's3':
+        if self.options.backend == 's3':
             if not os.path.exists(self.path+'.terraform'):
                 self.build_configure_args()
                 print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
@@ -245,14 +246,31 @@ class terraform_this():
                              self.relative_path +
                              "/terraform.tfstate",
                              ]
-                subprocess_args.insert(0, self.prog)
-                subprocess_args.insert(1, 'remote')
-                subprocess_args.insert(2, 'config')
-                subprocess.call(subprocess_args)
+        elif self.options.backend = 'swift':
+            if not os.path.exists(self.path+'.terraform'):
+                self.build_configure_args()
+                print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
+                print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
+                       "ket: {}").format(self.options.key,
+                                         os.environ.get('S3_REGION'),
+                                         os.environ.get('S3_BUCKET')
+                                         )
+                subprocess_args = ["-backend=s3",
+                             "-backend-config=bucket="+self.options.bucket,
+                             "-backend-config=region="+self.options.region,
+                             "-backend-config=key="+self.options.key+"/" +
+                             self.relative_path +
+                             "/terraform.tfstate",
+                             ]
+         return subprocess_args   
 
-        pass
+    def configure(self):
+         subprocess_args.insert(0, self.prog)
+         subprocess_args.insert(1, 'remote')
+         subprocess_args.insert(2, 'config')
+         subprocess.call(subprocess_args())
 
-    def make_extras(self):
+    def extras(self):
     # CREATE EXTRA ARGS THAT ARE GOING TO BE PASSED TO TERRAFORM e.g to pass 
     # any terraform native option e.g. -module or -refresh or -state etc
     # was created to add -var of -var-file
@@ -263,7 +281,6 @@ class terraform_this():
         return self.extra_args
 
     def run(self):
-        self.args = sys.argv
         self.configure()
         if 'plan' in self.args:
             self.plan()
@@ -275,19 +292,19 @@ class terraform_this():
             self.plan()
 
     def plan(self):
-        subprocess_args = [self.prog, 'plan']+self.make_extras()
+        subprocess_args = [self.prog, 'plan']+self.extras()
         print tcol.YELLOW+tcol.BOLD+"running terraform with " \
             "args "+tcol.ENDC+str(subprocess_args)
         subprocess.call(subprocess_args)
 
     def apply(self):
-        subprocess_args = [self.prog, 'apply']+self.make_extras()
+        subprocess_args = [self.prog, 'apply']+self.extras()
         print tcol.YELLOW+tcol.BOLD+"running terraform with " \
             "args "+tcol.ENDC+str(subprocess_args)
         subprocess.call(subprocess_args)
 
     def get(self):
-        subprocess_args = [self.prog, 'get']+self.make_extras()
+        subprocess_args = [self.prog, 'get']+self.extras()
         print tcol.YELLOW+tcol.BOLD+"running terraform with " \
             "args "+tcol.ENDC+str(subprocess_args)
         subprocess.call(subprocess_args)
@@ -309,9 +326,8 @@ if __name__ == "__main__":
     opts = get_opts()
     parameters  = opts.default_params
     options = opts.options
-    print options
-    print parameters
-    print options['backend']
-    instance = terraform_this(parameters,options)
+    args = opts.args
+    instance = terraform_this(parameters,options,args)
     instance.run()
+
 
