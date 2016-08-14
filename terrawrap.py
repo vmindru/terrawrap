@@ -6,10 +6,10 @@ import os
 import subprocess
 import re
 
-progvers = "%prog 0.2.1"
+progvers = "%prog 0.3.0"
 
 
-class tcol:
+class TextColor:
     YELLOW = '\033[33m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
@@ -95,59 +95,9 @@ class GetOpts():
             self.args = args 
 
 
-
-class TerraformThis():
-    def __init__(self,parameters,options,args):
-        self.path = parameters['path']
-        self.prog = parameters['prog']
-        self.options = options
-        self.args = args 
-       
-
-    def key_from_git(self):
-    # try to auto figure out the key , if no GIT origin is present we will ask to
-    # inpute -k option 
-    #TODO: change this to simple check of the file insted of calling the GIT command
-        data = subprocess.Popen(['git', 'remote', 'show', '-n', 'origin'],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        data.wait()
-        if data.returncode == 0:
-            out, err = data.communicate()
-            for line in out.splitlines():
-                if 'Fetch' in line:
-                    match = re.search('\/.*', line)
-                    if match is not None:
-                        key = match.group(0).split('.')[0]
-                        key.replace('/', '')
-
-                    else:
-                        exit('Can not figure out the repo name base on your '
-                             'origin, please use -k key to specify the key')
-        else:
-            exit('Your git does not seem to have a remote origin. Please set '
-                 'it or use -k key to specify the key.')
-
-        # let's find out the relative path to the .git base this will be used
-        # to compound the S3_KEY
-        data = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        data.wait()
-        if data.returncode == 0:
-            self.top_level_path, err = data.communicate()
-            self.top_level_path = self.top_level_path.rstrip()
-        else:
-            exit('Can not determine the relative path, please create an issue'
-                 ' at https://github.com/strataconsulting/terrawrap/ .')
-
-        # CONVERT STRING TO ARRAY AND SUBSTRACT THE RELATIVE PATH
-        s0 = self.path.split('/')
-        s1 = self.top_level_path.split('/')
-        for item in s1:
-            s0.remove(item)
-        self.relative_path = "/".join(s0)
-        return key
+class BackendConfigs():
+    def __init__(self):
+        pass
 
     def s3_build_configure_args():
         # DO S3 PREPAREATIONS as per https://www.terraform.io/docs/state/remote/s3.html
@@ -220,6 +170,62 @@ class TerraformThis():
 
 
 
+
+class TerraformThis():
+    def __init__(self,parameters,options,args):
+        self.path = parameters['path']
+        self.prog = parameters['prog']
+        self.options = options
+        self.args = args 
+       
+
+    def key_from_git(self):
+    # try to auto figure out the key , if no GIT origin is present we will ask to
+    # inpute -k option 
+    #TODO: change this to simple check of the file insted of calling the GIT command
+        data = subprocess.Popen(['git', 'remote', 'show', '-n', 'origin'],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        data.wait()
+        if data.returncode == 0:
+            out, err = data.communicate()
+            for line in out.splitlines():
+                if 'Fetch' in line:
+                    match = re.search('\/.*', line)
+                    if match is not None:
+                        key = match.group(0).split('.')[0]
+                        key.replace('/', '')
+
+                    else:
+                        exit('Can not figure out the repo name base on your '
+                             'origin, please use -k key to specify the key')
+        else:
+            exit('Your git does not seem to have a remote origin. Please set '
+                 'it or use -k key to specify the key.')
+
+        # let's find out the relative path to the .git base this will be used
+        # to compound the S3_KEY
+        data = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        data.wait()
+        if data.returncode == 0:
+            self.top_level_path, err = data.communicate()
+            self.top_level_path = self.top_level_path.rstrip()
+        else:
+            exit('Can not determine the relative path, please create an issue'
+                 ' at https://github.com/strataconsulting/terrawrap/ .')
+
+        # CONVERT STRING TO ARRAY AND SUBSTRACT THE RELATIVE PATH
+        s0 = self.path.split('/')
+        s1 = self.top_level_path.split('/')
+        for item in s1:
+            s0.remove(item)
+        self.relative_path = "/".join(s0)
+        return key
+
+
+
     def build_configure_args(self):
         """ builds terraform remote config args, returns [] with args"""
         # DEFAULT THE RELATIVE PATH TO '' IN CASE YOU ARE RUNNING THIS FOR NON
@@ -237,7 +243,7 @@ class TerraformThis():
         if self.options.backend == 's3':
             if not os.path.exists(self.path+'.terraform'):
                 self.build_configure_args()
-                print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
+                print TextColor.YELLOW+TextColor.BOLD+"updating remote config"+TextColor.ENDC
                 print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
                        "ket: {}").format(self.options.key,
                                          os.environ.get('S3_REGION'),
@@ -251,22 +257,9 @@ class TerraformThis():
                              "/terraform.tfstate",
                              ]
         elif self.options.backend == 'swift':
-            if not os.path.exists(self.path+'.terraform'):
-                self.build_configure_args()
-                print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
-                print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
-                       "ket: {}").format(self.options.key,
-                                         os.environ.get('S3_REGION'),
-                                         os.environ.get('S3_BUCKET')
-                                         )
-                subprocess_args = ["-backend=s3",
-                             "-backend-config=bucket="+self.options.bucket,
-                             "-backend-config=region="+self.options.region,
-                             "-backend-config=key="+self.options.key+"/" +
-                             self.relative_path +
-                             "/terraform.tfstate",
-                             ]
-        return subprocess_args   
+            # RETURN SWIFT CONFIGS 
+            pass 
+             return subprocess_args   
 
     def configure(self):
          subprocess_args = self.subprocess_args()
@@ -298,20 +291,20 @@ class TerraformThis():
 
     def plan(self):
         subprocess_args = [self.prog, 'plan']+self.extras()
-        print tcol.YELLOW+tcol.BOLD+"running terraform with " \
-            "args "+tcol.ENDC+str(subprocess_args)
+        print TextColor.YELLOW+TextColor.BOLD+"running terraform with " \
+            "args "+TextColor.ENDC+str(subprocess_args)
         subprocess.call(subprocess_args)
 
     def apply(self):
         subprocess_args = [self.prog, 'apply']+self.extras()
-        print tcol.YELLOW+tcol.BOLD+"running terraform with " \
-            "args "+tcol.ENDC+str(subprocess_args)
+        print TextColor.YELLOW+TextColor.BOLD+"running terraform with " \
+            "args "+TextColor.ENDC+str(subprocess_args)
         subprocess.call(subprocess_args)
 
     def get(self):
         subprocess_args = [self.prog, 'get']+self.extras()
-        print tcol.YELLOW+tcol.BOLD+"running terraform with " \
-            "args "+tcol.ENDC+str(subprocess_args)
+        print TextColor.YELLOW+TextColor.BOLD+"running terraform with " \
+            "args "+TextColor.ENDC+str(subprocess_args)
         subprocess.call(subprocess_args)
 
     def s3_lock(self):
