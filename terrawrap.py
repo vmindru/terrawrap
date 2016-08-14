@@ -17,12 +17,12 @@ class tcol:
 
 
 
-class get_opts():
+class getOpts():
     def __init__(self):
             self.collect_opts()
-            self.init_default_params()
+            self.initDefaultParams()
     
-    def init_default_params(self):
+    def initDefaultParams(self):
             if 'TERRAWRAP_PATH' not in os.environ:
                 path = os.getcwd()
             else:
@@ -96,7 +96,7 @@ class get_opts():
 
 
 
-class terraform_this():
+class terraformThis():
     def __init__(self,parameters,options,args):
         self.path = parameters['path']
         self.prog = parameters['prog']
@@ -148,21 +148,27 @@ class terraform_this():
             s0.remove(item)
         self.relative_path = "/".join(s0)
         return key
+    def S3BuildConfigureArgs():
 
-    def build_configure_args(self):
+        pass
+
+
+
+    def BuildConfgiureArgs(self):
         # DEFAULT THE RELATIVE PATH TO '' IN CASE YOU ARE RUNNING THIS FOR NON
         # GIT with -K option
         valid_yes = ['Yes', 'yes', 'Y', 'y'] 
-        valid_no = ['No', 'no', 'N', 'n']:
-        valid_answer = valid_yes + valid_no
+        valid_no = ['No', 'no', 'N', 'n']
+        valid_answers = valid_yes + valid_no
         self.relative_path = ''
+        key = self.KeyFromGit() 
         if self.options.key == '':
         # CHECK IF self.options.key has a value, if it's kalled with -k param.
         # if not check if we are running on GIT 
-           self.KeyFromGit() is False:
+            if key is False:
                 if 'S3_KEY' in os.environ and self.options.quiet is False:
                     answer = 'UNDEF'
-                    while answer not in:
+                    while answer not in valid_answers:
                         sys.stdout.write("S3_KEY seems to  be set to: \"%s\",\
                                           use this value? Y/n: "
                                          % os.environ.get('S3_KEY')
@@ -182,7 +188,7 @@ class terraform_this():
                     exit("this does not look like a git folder, can not auto"
                          " determine key please -k option")
             else:
-                self.options.key = self.key
+                self.options.key = key
 
         if 'S3_REGION' in os.environ and self.options.quiet is False:
             answer = 'UNDEF'
@@ -230,13 +236,13 @@ class terraform_this():
             exit("This does not look like a git folder, can not auto "
                  "determine bucket please -k option")
 
-    def subprocess_args(self):
+    def SubprocessArgs(self):
     # BEFORE EVERY RUN , TERRAFORM WILL MAKE SURE OUR STATE BACKEND IS CONFIGURED
     # IT WILL PREPARE THE ARGS AND CALL terraform remote config WITH COMPUTED ARGS
         subprocess_args = []
         if self.options.backend == 's3':
             if not os.path.exists(self.path+'.terraform'):
-                self.build_configure_args()
+                self.BuildConfgiureArgs()
                 print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
                 print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
                        "ket: {}").format(self.options.key,
@@ -252,7 +258,7 @@ class terraform_this():
                              ]
         elif self.options.backend == 'swift':
             if not os.path.exists(self.path+'.terraform'):
-                self.build_configure_args()
+                self.BuildConfgiureArgs()
                 print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
                 print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
                        "ket: {}").format(self.options.key,
@@ -269,7 +275,7 @@ class terraform_this():
         return subprocess_args   
 
     def configure(self):
-         subprocess_args = self.subprocess_args()
+         subprocess_args = self.SubprocessArgs()
          subprocess_args.insert(0, self.prog)
          subprocess_args.insert(1, 'remote')
          subprocess_args.insert(2, 'config')
@@ -328,11 +334,11 @@ class terraform_this():
         pass
 
 if __name__ == "__main__":
-    opts = get_opts()
+    opts = getOpts()
     parameters  = opts.default_params
     options = opts.options
     args = opts.args
-    instance = terraform_this(parameters,options,args)
+    instance = terraformThis(parameters,options,args)
     instance.run()
 
 
