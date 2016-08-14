@@ -17,12 +17,12 @@ class tcol:
 
 
 
-class getOpts():
+class GetOpts():
     def __init__(self):
             self.collect_opts()
-            self.initDefaultParams()
+            self.init_default_params()
     
-    def initDefaultParams(self):
+    def init_default_params(self):
             if 'TERRAWRAP_PATH' not in os.environ:
                 path = os.getcwd()
             else:
@@ -96,7 +96,7 @@ class getOpts():
 
 
 
-class terraformThis():
+class TerraformThis():
     def __init__(self,parameters,options,args):
         self.path = parameters['path']
         self.prog = parameters['prog']
@@ -104,7 +104,7 @@ class terraformThis():
         self.args = args 
        
 
-    def KeyFromGit(self):
+    def key_from_git(self):
     # try to auto figure out the key , if no GIT origin is present we will ask to
     # inpute -k option 
     #TODO: change this to simple check of the file insted of calling the GIT command
@@ -149,7 +149,7 @@ class terraformThis():
         self.relative_path = "/".join(s0)
         return key
 
-    def S3BuildConfigureArgs():
+    def s3_build_configure_args():
         # DO S3 PREPAREATIONS as per https://www.terraform.io/docs/state/remote/s3.html
 
         valid_yes = ['Yes', 'yes', 'Y', 'y'] 
@@ -220,23 +220,23 @@ class terraformThis():
 
 
 
-    def BuildConfgiureArgs(self):
+    def build_configure_args(self):
         """ builds terraform remote config args, returns [] with args"""
         # DEFAULT THE RELATIVE PATH TO '' IN CASE YOU ARE RUNNING THIS FOR NON
         # GIT with -K option
         self.relative_path = ''
-        key = self.KeyFromGit() 
+        key = self.key_from_git() 
         if self.options.key == '':
         # CHECK IF self.options.key has a value, if it's kalled with -k param.
         # if not check if we are running on GIT 
 
-    def SubprocessArgs(self):
+    def subprocess_args(self):
         """ BEFORE EVERY RUN , TERRAFORM WILL MAKE SURE OUR STATE BACKEND IS CONFIGURED
              IT WILL PREPARE THE ARGS AND CALL terraform remote config WITH COMPUTED ARGS"""
         subprocess_args = []
         if self.options.backend == 's3':
             if not os.path.exists(self.path+'.terraform'):
-                self.BuildConfgiureArgs()
+                self.build_configure_args()
                 print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
                 print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
                        "ket: {}").format(self.options.key,
@@ -252,7 +252,7 @@ class terraformThis():
                              ]
         elif self.options.backend == 'swift':
             if not os.path.exists(self.path+'.terraform'):
-                self.BuildConfgiureArgs()
+                self.build_configure_args()
                 print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
                 print ("CONFIGURING TERRAFORM with opts: key: {}, region: {}, buc"
                        "ket: {}").format(self.options.key,
@@ -269,7 +269,7 @@ class terraformThis():
         return subprocess_args   
 
     def configure(self):
-         subprocess_args = self.SubprocessArgs()
+         subprocess_args = self.subprocess_args()
          subprocess_args.insert(0, self.prog)
          subprocess_args.insert(1, 'remote')
          subprocess_args.insert(2, 'config')
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     parameters  = opts.default_params
     options = opts.options
     args = opts.args
-    instance = terraformThis(parameters,options,args)
+    instance = TerraformThis(parameters,options,args)
     instance.run()
 
 
