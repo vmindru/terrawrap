@@ -104,7 +104,7 @@ class terraform_this():
         self.args = args 
        
 
-    def get_key(self):
+    def KeyFromGit(self):
     # try to auto figure out the key , if no GIT origin is present we will ask to
     # inpute -k option 
     #TODO: change this to simple check of the file insted of calling the GIT command
@@ -118,8 +118,8 @@ class terraform_this():
                 if 'Fetch' in line:
                     match = re.search('\/.*', line)
                     if match is not None:
-                        self.key = match.group(0).split('.')[0]
-                        self.key.replace('/', '')
+                        key = match.group(0).split('.')[0]
+                        key.replace('/', '')
 
                     else:
                         exit('Can not figure out the repo name base on your '
@@ -147,27 +147,30 @@ class terraform_this():
         for item in s1:
             s0.remove(item)
         self.relative_path = "/".join(s0)
-        return self.key
+        return key
 
     def build_configure_args(self):
         # DEFAULT THE RELATIVE PATH TO '' IN CASE YOU ARE RUNNING THIS FOR NON
         # GIT with -K option
+        valid_yes = ['Yes', 'yes', 'Y', 'y'] 
+        valid_no = ['No', 'no', 'N', 'n']:
+        valid_answer = valid_yes + valid_no
         self.relative_path = ''
         if self.options.key == '':
-            self.get_key()
-            if self.key is False:
+        # CHECK IF self.options.key has a value, if it's kalled with -k param.
+        # if not check if we are running on GIT 
+           self.KeyFromGit() is False:
                 if 'S3_KEY' in os.environ and self.options.quiet is False:
                     answer = 'UNDEF'
-                    while answer not in ['Yes', 'yes', 'No', 'no',
-                                         'Y', 'y', 'N', 'n', '']:
+                    while answer not in:
                         sys.stdout.write("S3_KEY seems to  be set to: \"%s\",\
                                           use this value? Y/n: "
                                          % os.environ.get('S3_KEY')
                                          )
                         answer = sys.stdin.readline().rstrip()
-                    if answer in ['Yes', 'yes', 'Y', 'y']:
+                    if answer in valid_yes: 
                         self.options.key = os.environ.get('S3_KEY')
-                    elif answer in ['No', 'no', 'N', 'n']:
+                    elif answer in valid_no:  
                         exit("This does not look like a git folder, i can not"
                              " auto determine key, please use -k option")
                     if answer in ['']:
@@ -230,6 +233,7 @@ class terraform_this():
     def subprocess_args(self):
     # BEFORE EVERY RUN , TERRAFORM WILL MAKE SURE OUR STATE BACKEND IS CONFIGURED
     # IT WILL PREPARE THE ARGS AND CALL terraform remote config WITH COMPUTED ARGS
+        subprocess_args = []
         if self.options.backend == 's3':
             if not os.path.exists(self.path+'.terraform'):
                 self.build_configure_args()
@@ -246,7 +250,7 @@ class terraform_this():
                              self.relative_path +
                              "/terraform.tfstate",
                              ]
-        elif self.options.backend = 'swift':
+        elif self.options.backend == 'swift':
             if not os.path.exists(self.path+'.terraform'):
                 self.build_configure_args()
                 print tcol.YELLOW+tcol.BOLD+"updating remote config"+tcol.ENDC
@@ -262,13 +266,14 @@ class terraform_this():
                              self.relative_path +
                              "/terraform.tfstate",
                              ]
-         return subprocess_args   
+        return subprocess_args   
 
     def configure(self):
+         subprocess_args = self.subprocess_args()
          subprocess_args.insert(0, self.prog)
          subprocess_args.insert(1, 'remote')
          subprocess_args.insert(2, 'config')
-         subprocess.call(subprocess_args())
+         subprocess.call(subprocess_args)
 
     def extras(self):
     # CREATE EXTRA ARGS THAT ARE GOING TO BE PASSED TO TERRAFORM e.g to pass 
