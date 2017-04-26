@@ -1,5 +1,9 @@
 # TerraWrap
 
+**This tool is obsolete and EOL. since https://github.com/hashicorp/terraform/pull/11286**
+We advise to use native terraform state capability's now. 
+
+
 [![Code Climate](https://codeclimate.com/github/strataconsulting/terrawrap/badges/gpa.svg)](https://codeclimate.com/github/strataconsulting/terrawrap) [![Test Coverage](https://codeclimate.com/github/strataconsulting/terrawrap/badges/coverage.svg)](https://codeclimate.com/github/strataconsulting/terrawrap/coverage) [![Issue Count](https://codeclimate.com/github/strataconsulting/terrawrap/badges/issue_count.svg)](https://codeclimate.com/github/strataconsulting/terrawrap)
 
 ## Description
